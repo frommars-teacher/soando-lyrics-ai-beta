@@ -9,7 +9,10 @@ export default {async fetch(request,env){
   const url=new URL(request.url);
   if(!url.pathname.startsWith('/api/'))return env.ASSETS.fetch(request);
   try{
-    if(url.pathname==='/api/status'&&request.method==='GET')return json({mode:'teacher-beta',connected:!!env.AI&&!!env.QUOTA&&!!env.TEACHER_CODE&&env.FREE_PLAN_CONFIRMED==='true',model:MODEL,authorized:await authorized(request,env)});
+    if(url.pathname==='/api/status'&&request.method==='GET'){
+      const missing=[!env.AI&&'AI',!env.QUOTA&&'QUOTA',!env.TEACHER_CODE&&'TEACHER_CODE',env.FREE_PLAN_CONFIRMED!=='true'&&'FREE_PLAN_CONFIRMED'].filter(Boolean);
+      return json({mode:'teacher-beta',connected:missing.length===0,missing,model:MODEL,authorized:await authorized(request,env)});
+    }
     if(request.method!=='POST')throw new AppError('METHOD','이 요청은 사용할 수 없어요.',405);
     if(request.headers.get('Origin')!==url.origin)throw new AppError('ORIGIN','이 사이트 화면에서 다시 시도해 주세요.',403);
     if(!request.headers.get('Content-Type')?.startsWith('application/json'))throw new AppError('INPUT','입력 형식이 맞지 않아요.',415);
