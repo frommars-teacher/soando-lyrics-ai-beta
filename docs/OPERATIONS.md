@@ -53,7 +53,17 @@ Cloudflare Workers AI 문서는 명시적 동의 없이 Customer Content를 모�
 11. [Qwen 원본 모델 라이선스](https://huggingface.co/Qwen/Qwen3-30B-A3B/blob/main/LICENSE)
 12. [한국관광공사 — 항일의 땅, 해방의 섬, 완도 소안도](https://korean.visitkorea.or.kr/detail/rem_detail.do?cotid=8d15c5fb-7cc8-4aab-88a8-38e8936d9ed0) — 역사 기준의 일반 사실만 요약. 원문·사진을 복제하지 않음.
 
-## 손글씨 사진 입력 (2026-10-11 추가)
+## 현재 사진 모델: Gemma 4 (2026-10-12)
+
+사진 인식만 `@cf/google/gemma-4-26b-a4b-it`로 교체했습니다. 가사 첨삭 모델 Qwen3는 유지합니다. 동일 Cloudflare AI 바인딩과 무료 플랜을 사용하므로 새 Google 계정/API 키는 필요하지 않습니다. Google Gemini Developer API를 사용하는 구성이 아닙니다.
+
+이미지는 검증 후 표준 messages의 image_url data URL로 전달하며 `response_format: json_object`를 요청합니다. `chat_template_kwargs.enable_thinking: false`, 최대 출력 2048 토큰, `store: false`를 적용합니다. 서버에서 생성 시간(elapsedMs)을 반환하고 인식 완료 안내에 표시합니다. 서버 혼잡·전체 업로드 시간을 포함한 실사용 지연은 이 수치와 다를 수 있습니다. 사진 예약 추정치 200 Neurons와 기존 일일 제한은 유지합니다.
+
+모델 라이선스는 공식 모델 문서가 연결하는 Apache 2.0(https://ai.google.dev/gemma/apache_2)입니다. 이전 Llama 전용 약관 활성화 버튼과 `/api/ocr-license` 경로는 제거했습니다. 서버가 사용자 대신 약관 동의 요청을 보내지 않습니다. 교사 테스트 접근 제한 및 학생 이용 조건 미확인 상태는 유지합니다.
+
+실제 한국어 손글씨 정확도와 응답 속도는 미검증입니다. 이전에 사용한 동일 사진으로 원문과 인식 글을 비교하고 누락/추가/오인식, 시간, 실패 횟수를 기록해 주세요. 모델 교체만으로 품질 향상을 보장하지 않습니다.
+
+## 이전 버전: 손글씨 사진 입력 (2026-10-11 추가)
 
 - 입력 화면에서 `사진 올리기` 또는 `카메라로 찍기` → `사진 속 가사 읽기` → 인식 글을 확인·수정 → `확인한 가사 넣기` → 기존 가사 분석 순서입니다. 기존 글이 있으면 교체와 뒤에 붙이기를 선택할 수 있습니다.
 - JPG/PNG/WebP, 원본 10MB 이하. 기기에서 방향을 보정하고 긴 변을 최대 1600px로 축소한 JPEG(1.5MB 이하)로 전송합니다. Canvas 재인코딩으로 원본 EXIF 위치 정보는 전송하지 않습니다. HEIC는 지원하지 않습니다.
