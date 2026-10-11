@@ -1,0 +1,3 @@
+export function finalSegments(original,feedback,decisions){let pos=0;const segments=[];for(const f of feedback){segments.push({text:original.slice(pos,f.start),changed:false});const d=decisions[f.id];const text=d&&d.action!=='keep'?d.text:f.original;segments.push({text,changed:text!==f.original});pos=f.end;}segments.push({text:original.slice(pos),changed:false});return segments;}
+export function finalLyrics(original,feedback,decisions){return finalSegments(original,feedback,decisions).map(s=>s.text).join('');}
+export function completed(feedback,decisions){return feedback.filter(f=>Object.hasOwn(decisions,f.id)).length;}

@@ -1,0 +1,18 @@
+import test from 'node:test';import assert from 'node:assert/strict';import fs from 'node:fs/promises';import {JSDOM} from 'jsdom';import {validateFeedback} from '../src/core.js';
+test('DOM 사용자 흐름: 순차 처리·되돌리기·직접 수정·복사·새로고침 복원·오류 (실제 AI 아님)',async()=>{
+ const html=await fs.readFile(new URL('../public/index.html',import.meta.url),'utf8');const dom=new JSDOM(html,{url:'https://beta.example/',pretendToBeVisual:true});
+ const {window}=dom;for(const name of ['window','document','localStorage','location'])globalThis[name]=window[name];Object.defineProperty(globalThis,'navigator',{value:window.navigator,configurable:true});const errors=[];window.addEventListener('error',e=>errors.push(e.error));window.scrollTo=()=>{};let copied='';Object.defineProperty(window.navigator,'clipboard',{value:{writeText:async t=>{copied=t;}}});let calls=0;let fail=false;
+ const original='고마운 마음을 마음을\n그 용기를 아주 오래오래 기억하고 또 기억할게';
+ const feedback=validateFeedback({summary:'감사의 마음이 담겼어요.',feedback:[{line:2,original:'그 용기를 아주 오래오래 기억하고 또 기억할게',reason:'길이를 나누면 부르기 편해요.',replacement:'그 용기를 기억할게\n오래오래 기억할게'},{line:1,original:'고마운 마음을 마음을',reason:'겹치는 말을 하나 줄여 볼까요?',replacement:'고마운 마음을'}]},original);
+ globalThis.fetch=async(path,options)=>{if(path==='/api/status')return Response.json({mode:'teacher-beta',connected:true,authorized:true});if(path==='/api/analyze'){calls++;return fail?Response.json({error:'오늘의 무료 사용량을 모두 사용했어요.'},{status:429}):Response.json(feedback);}throw new Error('unexpected request '+path);};
+ const tick=()=>new Promise(resolve=>setTimeout(resolve,0));const get=id=>window.document.querySelector(id);const click=async id=>{assert.ok(get(id),id);get(id).click();await tick();};
+ await import('../public/app.js?ui-1');await tick();await click('#start');get('#lyrics').value=original;get('#lyrics').dispatchEvent(new window.Event('input'));await click('#analyze');assert.equal(calls,1);assert.match(get('.heading').textContent,/제안 1 \/ 2/);
+ await click('#accept');assert.match(get('.heading').textContent,/제안 2 \/ 2/);assert.match(get('.progress-text').textContent,/1 \/ 2개/);assert.equal(get('#next').disabled,true);
+ await click('#prev');await click('#keep');assert.match(get('.progress-text').textContent,/1 \/ 2개/);
+ await click('#manual-open');get('#manual').value='너희의 용기를\n오래 기억할게';await click('#save-manual');assert.ok(get('#final'));assert.equal(get('#final').textContent,'고마운 마음을 마음을\n너희의 용기를\n오래 기억할게');assert.equal(calls,1);await click('#copy');assert.equal(copied,get('#final').textContent);
+ await click('#revisit');assert.match(get('.selection').textContent,/원문 유지/);await click('#next');assert.match(get('.selection').textContent,/직접 수정/);await click('#next');
+ const saved=window.localStorage.getItem('soando-lyrics-ai-beta-v1');assert.equal(JSON.parse(saved).stage,'result');
+ await click('#revisit');await click('#edit-draft');assert.equal(get('#lyrics').value,copied);fail=true;await click('#analyze');assert.match(get('#error').textContent,/무료 사용량/);assert.equal(get('#lyrics').value,copied);assert.equal(get('#analyze').disabled,false);assert.equal(calls,2);
+ assert.deepEqual(errors,[]);dom.window.close();
+ const reloaded=new JSDOM(html,{url:'https://beta.example/',pretendToBeVisual:true});for(const name of ['window','document','localStorage','location'])globalThis[name]=reloaded.window[name];reloaded.window.localStorage.setItem('soando-lyrics-ai-beta-v1',saved);reloaded.window.scrollTo=()=>{};await import('../public/app.js?ui-reload');await tick();assert.equal(reloaded.window.document.querySelector('#final').textContent,copied);assert.equal(calls,2);reloaded.window.close();
+});

@@ -1,0 +1,9 @@
+{
+  "version":"2026-10-11",
+  "bookTextProvided":false,
+  "facts":[
+    {"id":"H1","text":"소안도 주민들은 일제강점기에 항일운동에 참여했다.","source":"https://korean.visitkorea.or.kr/detail/rem_detail.do?cotid=8d15c5fb-7cc8-4aab-88a8-38e8936d9ed0"},
+    {"id":"H2","text":"사립소안학교는 주민들의 교육과 항일운동에 관련된 장소였다.","source":"https://korean.visitkorea.or.kr/detail/rem_detail.do?cotid=8d15c5fb-7cc8-4aab-88a8-38e8936d9ed0"}
+  ],
+  "guidance":["독립운동의 의미와 감사·존경은 표현의 방향이지 필수 단어 목록이 아니다.","태극기·바다·바람 등의 비유를 역사 오류로 판단하지 않는다.","자료에 없는 날짜·인물·사건은 오류로 단정하지 말고 교사와 책에서 확인하도록 안내한다.","도서 『소안도』의 장면·인물 대사·줄거리는 제공되지 않았으므로 생성하거나 확정하지 않는다."]
+}
