@@ -8,6 +8,6 @@
   "ai": {"binding":"AI"},
   "durable_objects": {"bindings":[{"name":"QUOTA","class_name":"Quota"}]},
   "migrations": [{"tag":"v1","new_sqlite_classes":["Quota"]}],
-  "vars": {"FREE_PLAN_CONFIRMED":"true","DAILY_REQUEST_LIMIT":"100","DAILY_NEURON_BUDGET":"9000","MAX_CONCURRENT_AI":"6"},
+  "vars": {"FREE_PLAN_CONFIRMED":"true","DAILY_REQUEST_LIMIT":"100","DAILY_NEURON_BUDGET":"9000","MAX_CONCURRENT_AI":"10"},
   "observability": {"enabled":false}
 }
