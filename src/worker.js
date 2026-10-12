@@ -32,14 +32,14 @@ export default {async fetch(request,env){
     const owner=await sign((request.headers.get('Cookie')||'')+ipHash,env.TEACHER_CODE);
     if(url.pathname==='/api/queue'){
       const data=await body(request);if(!/^[a-f0-9-]{36}$/.test(data.requestId||''))throw new AppError('INPUT','대기 정보를 확인해 주세요.');
-      const result=await quota.fetch('https://quota/'+(data.cancel===true?'cancel':'status'),{method:'POST',body:JSON.stringify({requestId:data.requestId,owner,concurrency:Math.max(1,Math.min(Number(env.MAX_CONCURRENT_AI)||10,10))})});
+      const result=await quota.fetch('https://quota/'+(data.cancel===true?'cancel':'status'),{method:'POST',body:JSON.stringify({requestId:data.requestId,owner,concurrency:Math.max(1,Math.min(Number(env.MAX_CONCURRENT_AI)||20,20))})});
       return json(await result.json(),result.status);
     }
     const isPhoto=url.pathname==='/api/transcribe';
     const data=await body(request,isPhoto?2100000:12000);
     if(isPhoto)imageBytes(data);const text=isPhoto?'':checkLyrics(data.lyrics);const messages=isPhoto?null:messagesFor(text);
     const requestId=data.requestId||crypto.randomUUID();if(!/^[a-f0-9-]{36}$/.test(requestId))throw new AppError('INPUT','요청 정보를 확인해 주세요.');
-    const reservation=await quota.fetch('https://quota/reserve',{method:'POST',body:JSON.stringify({ipHash,owner,requestId,concurrency:Math.max(1,Math.min(Number(env.MAX_CONCURRENT_AI)||10,10)),neurons:isPhoto?OCR_RESERVED_NEURONS:reservedNeurons(messages),dailyLimit:Math.min(Number(env.DAILY_REQUEST_LIMIT)||100,100),budget:Math.min(Number(env.DAILY_NEURON_BUDGET)||9000,9000)})});
+    const reservation=await quota.fetch('https://quota/reserve',{method:'POST',body:JSON.stringify({ipHash,owner,requestId,concurrency:Math.max(1,Math.min(Number(env.MAX_CONCURRENT_AI)||20,20)),neurons:isPhoto?OCR_RESERVED_NEURONS:reservedNeurons(messages),dailyLimit:Math.min(Number(env.DAILY_REQUEST_LIMIT)||100,100),budget:Math.min(Number(env.DAILY_NEURON_BUDGET)||9000,9000)})});
     const admitted=await reservation.json();if(reservation.status===202)return json(admitted,202);if(!reservation.ok)throw new AppError(admitted.code,admitted.message,reservation.status);
     let timer;let timedOut=false;const started=Date.now();try{
       const result=await Promise.race([env.AI.run(isPhoto?OCR_MODEL:MODEL,isPhoto?ocrInput(data.image):{messages,max_tokens:MAX_TOKENS,temperature:0.3,response_format:{type:'json_schema',json_schema:schemaForAI()}}),new Promise((_,reject)=>{timer=setTimeout(()=>{timedOut=true;reject(new AppError('TIMEOUT','AI가 오래 생각하고 있어요. 잠시 후 다시 시도해 주세요.',504));},65000);})]);
@@ -58,7 +58,7 @@ export class Quota {
     for(const [id,until]of Object.entries(state.leases))if(until<now){delete state.leases[id];delete state.active[id];}
     state.queue=state.queue.filter(item=>item.until>now);
     const path=new URL(request.url).pathname;
-    const concurrency=Math.max(1,Math.min(Number(data.concurrency)||10,10));
+    const concurrency=Math.max(1,Math.min(Number(data.concurrency)||20,20));
     const available=()=>Math.max(0,concurrency-Object.keys(state.leases).length);
     const queued=async(index)=>{const item=state.queue[index];item.until=now+45000;await storage.put('quota',state);return json({queued:true,requestId:item.requestId,position:index+1,ready:index<available(),retryAfterMs:3000},202);};
     if(path==='/release'){delete state.leases[data.lease];delete state.active[data.lease];await storage.put('quota',state);return json({ok:true});}
