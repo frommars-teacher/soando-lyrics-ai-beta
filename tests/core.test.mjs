@@ -9,3 +9,12 @@ test('피드백은 원문 등장 순서대로 정렬',()=>{const out=validateFee
 test('없는 구절·틀린 줄·중복 줄·모호한 반복·부당한 응답 길이 거부',()=>{const item=data.feedback[0];for(const changed of [{original:'원문에 없음'},{line:1},{line:99},{reason:'가'.repeat(181)},{replacement:item.original}])assert.throws(()=>validateFeedback({summary:'분석',feedback:[{...item,...changed}]},text));assert.throws(()=>validateFeedback({summary:'분석',feedback:[item,item]},text));assert.throws(()=>validateFeedback({summary:'분석',feedback:[{line:1,original:'마음',reason:'확인',replacement:'용기'}]},'마음 마음'));});
 test('하나 수용해도 나머지는 미완료이며 이전 선택 변경은 중복 반영 안 됨',()=>{const f=validateFeedback(data,text).feedback;const d={};d[f[0].id]={action:'accept',text:f[0].replacement};assert.equal(completed(f,d),1);assert.equal(finalLyrics(text,f,d),'소안도의 바람\n고마운 마음을\n우리의 용기를 오래오래 기억할게');d[f[1].id]={action:'manual',text:'용기를 기억해\n언제나 기억해'};assert.equal(completed(f,d),2);d[f[0].id]={action:'keep',text:f[0].original};assert.equal(finalLyrics(text,f,d),'소안도의 바람\n고마운 마음을 마음을\n용기를 기억해\n언제나 기억해');assert.equal(finalLyrics(text,f,JSON.parse(JSON.stringify(d))),finalLyrics(text,f,d));});
 test('첨삭 없음 허용, 한국어 전체 분석 프롬프트와 비용 예약',()=>{assert.deepEqual(validateFeedback({summary:'고칠 부분을 찾지 못했어요.',feedback:[]},'소안도').feedback,[]);const m=messagesFor(text);assert.match(m[1].content,/소안도/);assert.ok(reservedNeurons(m)>76);assert.equal(MODEL,'@cf/qwen/qwen3-30b-a3b-fp8');});
+
+test('실제 병렬 검사 오류 보완: 정확한 원문으로만 행 번호 복구, 중복/변화 없는 제안 제외',async()=>{
+ const {recoverFeedback}=await import('../src/core.js');const text='소안도의 용기를 기억해\n\n고마운 마음을 마음을 전해요';
+ const good={line:2,original:'고마운 마음을 마음을 전해요',reason:'겹친 말을 줄여 볼까요?',replacement:'고마운 마음을 전해요'};
+ const result=recoverFeedback({summary:'감사의 마음이 전해져요.',feedback:[good,{...good,line:3}, {line:1,original:'소안도의 용기를 기억해',reason:'잘 썼어요.',replacement:'소안도의 용기를 기억해'}]},text);
+ assert.equal(result.feedback.length,1);assert.equal(result.feedback[0].line,3);assert.equal(text.slice(result.feedback[0].start,result.feedback[0].end),good.original);assert.ok(result.notice);
+ assert.throws(()=>recoverFeedback({summary:'마음이 전해져요.',feedback:[{...good,original:'없는 원문'}]},text));
+ assert.throws(()=>recoverFeedback({summary:'마음이 전해져요.',feedback:[{...good,line:99,original:'반복'}]},'반복\n반복'));
+});

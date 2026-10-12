@@ -1,5 +1,5 @@
 import {OCR_MODEL,OCR_RESERVED_NEURONS,imageBytes,ocrInput,readTranscript} from './ocr.js';
-import {MODEL,MAX_TOKENS,AppError,checkLyrics,messagesFor,parseModel,validateFeedback,reservedNeurons} from './core.js';
+import {MODEL,MAX_TOKENS,AppError,checkLyrics,messagesFor,parseModel,recoverFeedback,reservedNeurons} from './core.js';
 const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
 const json=(data,status=200,extra={})=>Response.json(data,{status,headers:{...headers,...extra}});
 async function sign(value,secret){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(value)))).map(x=>x.toString(16).padStart(2,'0')).join('');}
@@ -43,7 +43,7 @@ export default {async fetch(request,env){
     const admitted=await reservation.json();if(reservation.status===202)return json(admitted,202);if(!reservation.ok)throw new AppError(admitted.code,admitted.message,reservation.status);
     let timer;let timedOut=false;const started=Date.now();try{
       const result=await Promise.race([env.AI.run(isPhoto?OCR_MODEL:MODEL,isPhoto?ocrInput(data.image):{messages,max_tokens:MAX_TOKENS,temperature:0.3,response_format:{type:'json_schema',json_schema:schemaForAI()}}),new Promise((_,reject)=>{timer=setTimeout(()=>{timedOut=true;reject(new AppError('TIMEOUT','AI가 오래 생각하고 있어요. 잠시 후 다시 시도해 주세요.',504));},65000);})]);
-      return json(isPhoto?{...readTranscript(result),elapsedMs:Date.now()-started}:validateFeedback(parseModel(result),text));
+      return json(isPhoto?{...readTranscript(result),elapsedMs:Date.now()-started}:recoverFeedback(parseModel(result),text));
     }catch(error){if(error instanceof AppError)throw error;const s=Number(error?.status||error?.statusCode);if(s===429||/quota|limit|capacity|3040|3036/i.test(error?.message||''))throw new AppError('AI_LIMIT','AI 무료 한도나 처리량에 도달했어요. 잠시 후 또는 내일 다시 해 주세요.',429);throw new AppError('AI_ERROR','AI 연결에 문제가 있어요. 작성한 가사는 남아 있으니 다시 시도해 주세요.',502);
     }finally{clearTimeout(timer);if(!timedOut)await quota.fetch('https://quota/release',{method:'POST',body:JSON.stringify({lease:admitted.lease})}).catch(()=>{});}
   }catch(error){if(error instanceof AppError)return json({error:error.message,code:error.code},error.status);return json({error:'연결에 문제가 있어요. 잠시 후 다시 시도해 주세요.',code:'SERVER'},503);}

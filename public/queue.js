@@ -13,7 +13,7 @@ export async function queuedAI(path,data,onProgress=()=>{},options={}){
       if(now()-started>600000)throw new Error('대기 시간이 길어졌어요. 입력한 가사는 남아 있으니 잠시 후 다시 시도해 주세요.');
       onProgress(path==='/api/transcribe'?'사진 속 가사를 읽고 있어요…':'내 가사를 읽고 다듬을 부분을 찾고 있어요…');
       let result;
-      try{result=await send(path,{...data,requestId});}catch(e){if(e.code!=='AI_LIMIT'||retry>=2)throw e;retry++;onProgress('AI가 바빠서 잠시 기다리고 있어요. 자동으로 다시 시도할게요.');await pause(5000*retry);continue;}
+      try{result=await send(path,{...data,requestId});}catch(e){if(!['AI_LIMIT','AI_RANGE','AI_FORMAT'].includes(e.code)||retry>=2)throw e;retry++;onProgress(e.code==='AI_LIMIT'?'AI가 바빠서 잠시 기다리고 있어요. 자동으로 다시 시도할게요.':'내 가사와 제안이 맞는지 다시 확인하고 있어요. 잠시만 기다려 주세요.');await pause(5000*retry);continue;}
       if(!result.queued)return result;
       waitNotice(result);
       while(true){
