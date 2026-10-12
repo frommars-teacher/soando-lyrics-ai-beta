@@ -14,6 +14,13 @@ export default {async fetch(request,env){
       const missing=[!env.AI&&'AI',!env.QUOTA&&'QUOTA',!env.TEACHER_CODE&&'TEACHER_CODE',env.FREE_PLAN_CONFIRMED!=='true'&&'FREE_PLAN_CONFIRMED'].filter(Boolean);
       return json({mode:'teacher-beta',connected:missing.length===0,missing,model:MODEL,ocrModel:OCR_MODEL,version:'photo-queue-v4',authorized:await authorized(request,env)});
     }
+    if(url.pathname==='/api/usage'&&request.method==='GET'){
+      if(!await authorized(request,env))throw new AppError('AUTH','교사 테스트 접속이 필요해요.',401);
+      if(!env.QUOTA)throw new AppError('NOT_READY','사용량 기록이 준비되지 않았어요.',503);
+      const quota=env.QUOTA.get(env.QUOTA.idFromName('global'));
+      const result=await quota.fetch('https://quota/usage',{method:'POST',body:JSON.stringify({})});
+      return json({...await result.json(),requestLimit:Math.min(Number(env.DAILY_REQUEST_LIMIT)||300,300),estimatedBudget:Math.min(Number(env.DAILY_NEURON_BUDGET)||30000,30000),providerUsageKnown:false});
+    }
     if(request.method!=='POST')throw new AppError('METHOD','이 요청은 사용할 수 없어요.',405);
     if(request.headers.get('Origin')!==url.origin)throw new AppError('ORIGIN','이 사이트 화면에서 다시 시도해 주세요.',403);
     if(!request.headers.get('Content-Type')?.startsWith('application/json'))throw new AppError('INPUT','입력 형식이 맞지 않아요.',415);
@@ -39,7 +46,7 @@ export default {async fetch(request,env){
     const data=await body(request,isPhoto?2100000:12000);
     if(isPhoto)imageBytes(data);const text=isPhoto?'':checkLyrics(data.lyrics);const messages=isPhoto?null:messagesFor(text);
     const requestId=data.requestId||crypto.randomUUID();if(!/^[a-f0-9-]{36}$/.test(requestId))throw new AppError('INPUT','요청 정보를 확인해 주세요.');
-    const reservation=await quota.fetch('https://quota/reserve',{method:'POST',body:JSON.stringify({ipHash,owner,requestId,concurrency:Math.max(1,Math.min(Number(env.MAX_CONCURRENT_AI)||20,20)),neurons:isPhoto?OCR_RESERVED_NEURONS:reservedNeurons(messages),dailyLimit:Math.min(Number(env.DAILY_REQUEST_LIMIT)||100,100),budget:Math.min(Number(env.DAILY_NEURON_BUDGET)||9000,9000)})});
+    const reservation=await quota.fetch('https://quota/reserve',{method:'POST',body:JSON.stringify({ipHash,owner,requestId,concurrency:Math.max(1,Math.min(Number(env.MAX_CONCURRENT_AI)||20,20)),neurons:isPhoto?OCR_RESERVED_NEURONS:reservedNeurons(messages),dailyLimit:Math.min(Number(env.DAILY_REQUEST_LIMIT)||300,300),budget:Math.min(Number(env.DAILY_NEURON_BUDGET)||30000,30000)})});
     const admitted=await reservation.json();if(reservation.status===202)return json(admitted,202);if(!reservation.ok)throw new AppError(admitted.code,admitted.message,reservation.status);
     let timer;let timedOut=false;const started=Date.now();try{
       const result=await Promise.race([env.AI.run(isPhoto?OCR_MODEL:MODEL,isPhoto?ocrInput(data.image):{messages,max_tokens:MAX_TOKENS,temperature:0.3,response_format:{type:'json_schema',json_schema:schemaForAI()}}),new Promise((_,reject)=>{timer=setTimeout(()=>{timedOut=true;reject(new AppError('TIMEOUT','AI가 오래 생각하고 있어요. 잠시 후 다시 시도해 주세요.',504));},65000);})]);
@@ -58,6 +65,7 @@ export class Quota {
     for(const [id,until]of Object.entries(state.leases))if(until<now){delete state.leases[id];delete state.active[id];}
     state.queue=state.queue.filter(item=>item.until>now);
     const path=new URL(request.url).pathname;
+    if(path==='/usage')return json({day:state.day,requests:state.count,estimatedReservedNeurons:state.neurons,active:Object.keys(state.leases).length,waiting:state.queue.length});
     const concurrency=Math.max(1,Math.min(Number(data.concurrency)||20,20));
     const available=()=>Math.max(0,concurrency-Object.keys(state.leases).length);
     const queued=async(index)=>{const item=state.queue[index];item.until=now+45000;await storage.put('quota',state);return json({queued:true,requestId:item.requestId,position:index+1,ready:index<available(),retryAfterMs:3000},202);};
@@ -81,7 +89,7 @@ export class Quota {
       state.queue.push({requestId,owner:data.owner,until:now+45000});index=state.queue.length-1;
     }
     if(index>=available())return queued(index);
-    const ip=state.ips[data.ipHash]||{start:now,count:0};if(now-ip.start>3600000){ip.start=now;ip.count=0;}if(ip.count>=100){state.queue.splice(index,1);await storage.put('quota',state);return json({code:'RATE',message:'이 네트워크에서 많이 사용했어요. 한 시간 뒤 다시 해 주세요.'},429);}
+    const ip=state.ips[data.ipHash]||{start:now,count:0};if(now-ip.start>3600000){ip.start=now;ip.count=0;}if(ip.count>=300){state.queue.splice(index,1);await storage.put('quota',state);return json({code:'RATE',message:'이 네트워크에서 많이 사용했어요. 한 시간 뒤 다시 해 주세요.'},429);}
     state.queue.splice(index,1);ip.count++;state.ips[data.ipHash]=ip;state.count++;state.neurons+=data.neurons;const lease=crypto.randomUUID();state.leases[lease]=now+120000;state.active[lease]=requestId;await storage.put('quota',state);return json({lease});
   });}
 }
