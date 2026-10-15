@@ -12,7 +12,7 @@ export default {async fetch(request,env){
   try{
     if(url.pathname==='/api/status'&&request.method==='GET'){
       const missing=[!env.AI&&'AI',!env.QUOTA&&'QUOTA',!env.TEACHER_CODE&&'TEACHER_CODE',env.FREE_PLAN_CONFIRMED!=='true'&&'FREE_PLAN_CONFIRMED'].filter(Boolean);
-      return json({mode:'teacher-beta',connected:missing.length===0,missing,model:MODEL,ocrModel:OCR_MODEL,version:'photo-queue-v4',authorized:await authorized(request,env)});
+      return json({mode:env.PUBLIC_AI_ENABLED==='true'?'classroom':'teacher-beta',connected:missing.length===0,missing,model:MODEL,ocrModel:OCR_MODEL,version:'classroom-v5',authorized:env.PUBLIC_AI_ENABLED==='true'||await authorized(request,env)});
     }
     if(url.pathname==='/api/usage'&&request.method==='GET'){
       if(!await authorized(request,env))throw new AppError('AUTH','교사 테스트 접속이 필요해요.',401);
@@ -34,7 +34,7 @@ export default {async fetch(request,env){
     }
     if(url.pathname==='/api/logout')return json({ok:true},200,{'Set-Cookie':'soando_session=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'});
     if(!['/api/analyze','/api/transcribe','/api/queue'].includes(url.pathname))throw new AppError('NOT_FOUND','요청한 기능을 찾지 못했어요.',404);
-    if(!await authorized(request,env))throw new AppError('AUTH','교사 테스트 코드를 먼저 입력해 주세요.',401);
+    if(env.PUBLIC_AI_ENABLED!=='true'&&!await authorized(request,env))throw new AppError('AUTH','지금은 교사 미리보기 중이에요.',401);
     if(env.FREE_PLAN_CONFIRMED!=='true'||!env.AI)throw new AppError('NOT_READY','무료 플랜과 AI 연결 확인이 아직 끝나지 않았어요.',503);
     const owner=await sign((request.headers.get('Cookie')||'')+ipHash,env.TEACHER_CODE);
     if(url.pathname==='/api/queue'){
