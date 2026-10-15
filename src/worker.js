@@ -1,5 +1,5 @@
 import {OCR_MODEL,OCR_RESERVED_NEURONS,imageBytes,ocrInput,readTranscript} from './ocr.js';
-import {MODEL,MAX_TOKENS,AppError,checkLyrics,messagesFor,parseModel,recoverFeedback,reservedNeurons} from './core.js';
+import {MODEL,MAX_TOKENS,AppError,checkLyrics,checkIntention,messagesFor,parseModel,recoverFeedback,reservedNeurons} from './core.js';
 const headers={'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff'};
 const json=(data,status=200,extra={})=>Response.json(data,{status,headers:{...headers,...extra}});
 async function sign(value,secret){const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(secret),{name:'HMAC',hash:'SHA-256'},false,['sign']);return Array.from(new Uint8Array(await crypto.subtle.sign('HMAC',key,new TextEncoder().encode(value)))).map(x=>x.toString(16).padStart(2,'0')).join('');}
@@ -44,7 +44,7 @@ export default {async fetch(request,env){
     }
     const isPhoto=url.pathname==='/api/transcribe';
     const data=await body(request,isPhoto?2100000:12000);
-    if(isPhoto)imageBytes(data);const text=isPhoto?'':checkLyrics(data.lyrics);const messages=isPhoto?null:messagesFor(text);
+    if(isPhoto)imageBytes(data);const text=isPhoto?'':checkLyrics(data.lyrics);const intention=isPhoto?'':checkIntention(data.intention);const messages=isPhoto?null:messagesFor(text,intention);
     const requestId=data.requestId||crypto.randomUUID();if(!/^[a-f0-9-]{36}$/.test(requestId))throw new AppError('INPUT','요청 정보를 확인해 주세요.');
     const reservation=await quota.fetch('https://quota/reserve',{method:'POST',body:JSON.stringify({ipHash,owner,requestId,concurrency:Math.max(1,Math.min(Number(env.MAX_CONCURRENT_AI)||20,20)),neurons:isPhoto?OCR_RESERVED_NEURONS:reservedNeurons(messages),dailyLimit:Math.min(Number(env.DAILY_REQUEST_LIMIT)||300,300),budget:Math.min(Number(env.DAILY_NEURON_BUDGET)||30000,30000)})});
     const admitted=await reservation.json();if(reservation.status===202)return json(admitted,202);if(!reservation.ok)throw new AppError(admitted.code,admitted.message,reservation.status);
