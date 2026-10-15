@@ -10,7 +10,7 @@ test('분석 API가 학생의 마음을 모델에 전달하고 잘못된 마음�
  let calls=0;let payload;
  const env={PUBLIC_AI_ENABLED:'true',TEACHER_CODE:'only-test',FREE_PLAN_CONFIRMED:'true',
   QUOTA:{idFromName:x=>x,get:()=>({fetch:async()=>Response.json({lease:'test-lease'})})},
-  AI:{run:async(model,input)=>{calls++;payload=input;return {response:{summary:'함께한 용기를 기억하고 싶군요.',feedback:[]}};}}};
+  AI:{run:async(model,input)=>{calls++;payload=input;return {response:{assessment:{status:'ready',reason:'감사의 마음을 살펴봐요.',nextSteps:[],lineChecks:[{line:1,relation:'connected'}]},summary:'함께한 용기를 기억하고 싶군요.',feedback:[]}};}}};
  const send=intention=>worker.fetch(new Request('https://test.example/api/analyze',{method:'POST',headers:{Origin:'https://test.example','Content-Type':'application/json'},body:JSON.stringify({lyrics:'고마워요',intention})}),env);
  assert.equal((await send('')).status,400);assert.equal(calls,0);
  assert.equal((await send('함께한 용기를 기억하고 싶어요')).status,200);assert.equal(calls,1);
@@ -42,7 +42,7 @@ test('마음 누락 안내→마음과 가사 전달→짧은 글 확장→다�
    if(path==='/api/status')return Response.json({connected:true,authorized:true});
    if(path==='/api/queue')return Response.json({ok:true});
    calls++;submitted=JSON.parse(options.body);
-   return Response.json({summary:'어떤 행동이 고마웠는지 한 줄 더 써 볼까요?',feedback:[]});
+   return Response.json({assessment:{status:'ready'},summary:'어떤 행동이 고마웠는지 한 줄 더 써 볼까요?',feedback:[]});
  };
  const get=s=>w.document.querySelector(s);const tick=()=>new Promise(r=>setTimeout(r,0));
  await import('../public/app.js?intention-flow');await tick();get('#start').click();await tick();
