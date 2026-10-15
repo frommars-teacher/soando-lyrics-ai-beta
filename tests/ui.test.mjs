@@ -30,3 +30,12 @@ test('사진 UI: 업로드→인식→불확실 글자 수정→확인→첨삭,
  await upload();fail=true;await click('#read-photo');await tick();assert.match(get('#error').textContent,/읽지 못/);assert.equal(get('#read-photo').disabled,false);assert.match(get('#lyrics').value,/기존 가사/);fail=false;await click('#read-photo');await tick();await click('#discard-transcript');assert.match(get('#lyrics').value,/기존 가사/);
  await upload('image/svg+xml');assert.match(get('#error').textContent,/JPG/);assert.match(get('#lyrics').value,/기존 가사/);await upload();await click('#read-photo');await tick();assert.ok(!get('#activate-photo'));assert.ok(get('#transcript'));get('#transcript').value='확인한 가사\n\n내 마음';get('#transcript').dispatchEvent(new w.Event('input'));await click('#use-transcript');await click('#analyze');assert.equal(analyzed,'확인한 가사\n\n내 마음');assert.equal(get('#final').textContent,analyzed);dom.window.close();
 });
+test('완성 가사 직접 편집→줄바꿈 그대로 복사→재평가 입력 연결',async()=>{
+ const html=await fs.readFile(new URL('../public/index.html',import.meta.url),'utf8');const dom=new JSDOM(html,{url:'https://edit.example/',pretendToBeVisual:true});const w=dom.window;
+ for(const key of ['window','document','localStorage','location'])globalThis[key]=w[key];Object.defineProperty(globalThis,'navigator',{value:w.navigator,configurable:true});w.scrollTo=()=>{};
+ let copied='';Object.defineProperty(w.navigator,'clipboard',{value:{writeText:async value=>{copied=value;}}});globalThis.fetch=async()=>Response.json({connected:true,authorized:true});
+ w.localStorage.setItem('soando-lyrics-ai-beta-v1',JSON.stringify({draft:'작은 섬의 용기',original:'작은 섬의 용기',feedback:[],decisions:{},index:0,summary:'마음이 담겼어요.',stage:'result'}));
+ await import('../public/app.js?final-edit-ui');const tick=()=>new Promise(r=>setTimeout(r,0));await tick();const get=s=>w.document.querySelector(s);
+ get('#final-editor').value='작은 섬의 용기\n\n우리 마음에 남아';get('#final-editor').dispatchEvent(new w.Event('input'));get('#copy').click();await tick();assert.equal(copied,'작은 섬의 용기\n\n우리 마음에 남아');assert.equal(JSON.parse(w.localStorage.getItem('soando-lyrics-ai-beta-v1')).finalDraft,copied);
+ get('#reevaluate').click();await tick();assert.equal(get('#lyrics').value,copied);assert.ok(get('#analyze'));dom.window.close();
+});
