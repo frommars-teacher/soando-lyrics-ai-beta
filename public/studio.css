@@ -22,3 +22,21 @@ main{max-width:1240px;margin:0 auto;padding:22px 32px 60px;min-height:calc(100vh
 @media(max-width:359px){.writing-actions .primary{font-size:11px}#lyrics::placeholder{font-size:11px}}
 
 @media(max-width:760px){.vinyl{transform:none}}
+
+/* Generated watercolor backdrop and a nine-slice paper frame.
+   The frame edges keep their size as a student resizes or extends the writing area. */
+body{background-color:#eef5f7;background-image:linear-gradient(#f6faf94d,#f6faf94d),url('./sea-paper-background.webp');background-repeat:no-repeat;background-position:center center;background-size:cover;background-attachment:fixed}
+.session-bar{background:#fffffff0;border-color:#d4e0e8}
+.song-path{border-color:#c4d6e1}.lyric-postcard{background:#ffffff3b;border-radius:20px;padding:32px 22px;margin-top:25px}
+.writing-paper,.feedback-grid>section>.paper,.result-grid>.paper:last-child{border-style:solid;border-color:#e4dcc6;border-width:62px 25px 45px;border-image-source:url('./song-paper-panel.webp');border-image-slice:13% 7% 11% fill;border-image-width:62px 25px 45px;border-image-repeat:stretch;border-radius:0;background:#fffaf0;background-clip:padding-box;box-shadow:none;padding:8px 14px 15px;filter:drop-shadow(1px 5px 5px #52667a12)}
+.writing-paper .field-kicker{color:#7c87a0}.writing-paper .photo-panel{background:#fffdf580;border-color:#d3cfbf}
+#lyrics{background-color:transparent;background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 33px,#bbb9a640 33px,#bbb9a640 34px)}
+#intention,#final-editor,.manual textarea,.transcript textarea{background-color:#fffaf0;background-image:url('./song-paper-panel.webp');background-size:500% 500%;background-position:center center;border-color:#d5c9a9;color:#334363}
+.intention-panel{background:#ffedb6eF;border:1px solid #ecdba6;box-shadow:3px 5px 0 #b3b6a41a;position:relative}.intention-panel:before{content:'';position:absolute;left:24px;top:-8px;width:70px;height:18px;background:#98bac275;transform:rotate(-6deg);border-left:2px dotted #e5efec;border-right:2px dotted #e5efec}
+.result-grid>.paper:first-child{background:#eaf1f3eb}.context{background:#e9eff5ed}.intention-recap{background:#e5edf5ed}.rewrite-prompts{background:#edf2f6ee}.suggestion{background:#eaf2e8e8}.side{background:#ffffff73;border-radius:16px;padding:23px 17px 17px;margin-top:18px}
+@media(max-width:760px){body{background-position:center top}.lyric-postcard{padding:25px 17px;margin-top:24px}.writing-paper,.feedback-grid>section>.paper,.result-grid>.paper:last-child{border-width:43px 14px 31px;border-image-width:43px 14px 31px;padding:9px 10px 14px}.writing-paper{margin-top:0}.writing-paper .field-kicker{margin-bottom:14px}#lyrics{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 31px,#bbb9a640 31px,#bbb9a640 32px)}.intention-panel:before{left:22px;width:60px;height:16px}.side{margin-top:0;padding:19px 15px}.result-grid>.paper:last-child{padding-bottom:15px}}
+@media(max-width:359px){.writing-paper,.feedback-grid>section>.paper,.result-grid>.paper:last-child{border-left-width:12px;border-right-width:12px;border-image-width:43px 12px 31px;padding-left:7px;padding-right:7px}}
+
+/* Quiet backing keeps small guidance readable over the painted margins. */
+.album-help,.hand-note{background:#f7faf9d9;width:fit-content;padding:4px 7px;border-radius:4px}.song-path{background:#f8fbf9cf;border-radius:14px;padding-left:18px;padding-right:18px}.lyric-postcard{background:#f8fbf9cc}
+@media(max-width:760px){.song-path{padding-left:14px;padding-right:14px}}
