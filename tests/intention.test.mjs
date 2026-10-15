@@ -15,6 +15,7 @@ test('분석 API가 학생의 마음을 모델에 전달하고 잘못된 마음�
  assert.equal((await send('')).status,400);assert.equal(calls,0);
  assert.equal((await send('함께한 용기를 기억하고 싶어요')).status,200);assert.equal(calls,1);
  assert.equal(JSON.parse(payload.messages[1].content).intention,'함께한 용기를 기억하고 싶어요');
+ assert.equal(payload.store,false);assert.equal(payload.chat_template_kwargs.enable_thinking,false);assert.equal(payload.response_format.type,'json_object');
 });
 
 test('마음은 별도 자료로 전달하고 공백·과도한 길이·개인정보는 거절',()=>{

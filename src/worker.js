@@ -12,7 +12,7 @@ export default {async fetch(request,env){
   try{
     if(url.pathname==='/api/status'&&request.method==='GET'){
       const missing=[!env.AI&&'AI',!env.QUOTA&&'QUOTA',!env.TEACHER_CODE&&'TEACHER_CODE',env.FREE_PLAN_CONFIRMED!=='true'&&'FREE_PLAN_CONFIRMED'].filter(Boolean);
-      return json({mode:env.PUBLIC_AI_ENABLED==='true'?'classroom':'teacher-beta',connected:missing.length===0,missing,model:MODEL,ocrModel:OCR_MODEL,version:'classroom-v5',authorized:env.PUBLIC_AI_ENABLED==='true'||await authorized(request,env)});
+      return json({mode:env.PUBLIC_AI_ENABLED==='true'?'classroom':'teacher-beta',connected:missing.length===0,missing,model:MODEL,ocrModel:OCR_MODEL,version:'heart-v1',authorized:env.PUBLIC_AI_ENABLED==='true'||await authorized(request,env)});
     }
     if(url.pathname==='/api/usage'&&request.method==='GET'){
       if(!await authorized(request,env))throw new AppError('AUTH','교사 테스트 접속이 필요해요.',401);
@@ -49,14 +49,12 @@ export default {async fetch(request,env){
     const reservation=await quota.fetch('https://quota/reserve',{method:'POST',body:JSON.stringify({ipHash,owner,requestId,concurrency:Math.max(1,Math.min(Number(env.MAX_CONCURRENT_AI)||20,20)),neurons:isPhoto?OCR_RESERVED_NEURONS:reservedNeurons(messages),dailyLimit:Math.min(Number(env.DAILY_REQUEST_LIMIT)||300,300),budget:Math.min(Number(env.DAILY_NEURON_BUDGET)||30000,30000)})});
     const admitted=await reservation.json();if(reservation.status===202)return json(admitted,202);if(!reservation.ok)throw new AppError(admitted.code,admitted.message,reservation.status);
     let timer;let timedOut=false;const started=Date.now();try{
-      const result=await Promise.race([env.AI.run(isPhoto?OCR_MODEL:MODEL,isPhoto?ocrInput(data.image):{messages,max_tokens:MAX_TOKENS,temperature:0.3,response_format:{type:'json_schema',json_schema:schemaForAI()}}),new Promise((_,reject)=>{timer=setTimeout(()=>{timedOut=true;reject(new AppError('TIMEOUT','AI가 오래 생각하고 있어요. 잠시 후 다시 시도해 주세요.',504));},65000);})]);
+      const result=await Promise.race([env.AI.run(isPhoto?OCR_MODEL:MODEL,isPhoto?ocrInput(data.image):{messages,max_completion_tokens:MAX_TOKENS,temperature:0.3,chat_template_kwargs:{enable_thinking:false},skip_special_tokens:true,response_format:{type:'json_object'},store:false}),new Promise((_,reject)=>{timer=setTimeout(()=>{timedOut=true;reject(new AppError('TIMEOUT','AI가 오래 생각하고 있어요. 잠시 후 다시 시도해 주세요.',504));},65000);})]);
       return json(isPhoto?{...readTranscript(result),elapsedMs:Date.now()-started}:recoverFeedback(parseModel(result),text));
     }catch(error){if(error instanceof AppError)throw error;const s=Number(error?.status||error?.statusCode);if(s===429||/quota|limit|capacity|3040|3036/i.test(error?.message||''))throw new AppError('AI_LIMIT','AI 무료 한도나 처리량에 도달했어요. 잠시 후 또는 내일 다시 해 주세요.',429);throw new AppError('AI_ERROR','AI 연결에 문제가 있어요. 작성한 가사는 남아 있으니 다시 시도해 주세요.',502);
     }finally{clearTimeout(timer);if(!timedOut)await quota.fetch('https://quota/release',{method:'POST',body:JSON.stringify({lease:admitted.lease})}).catch(()=>{});}
   }catch(error){if(error instanceof AppError)return json({error:error.message,code:error.code},error.status);return json({error:'연결에 문제가 있어요. 잠시 후 다시 시도해 주세요.',code:'SERVER'},503);}
 }};
-import {schema} from './core.js';
-function schemaForAI(){return schema;}
 export class Quota {
   constructor(ctx){this.ctx=ctx;}
   async fetch(request){const data=await request.json();const now=Date.now();const day=new Date(now).toISOString().slice(0,10);return this.ctx.storage.transaction(async storage=>{
