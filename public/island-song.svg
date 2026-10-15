@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180" viewBox="0 0 240 180" fill="none">
+  <path d="M30 139C6 120 11 68 37 41C64 12 119 13 153 23C192 9 225 44 223 85C247 120 218 159 180 160C136 181 65 174 30 139Z" fill="#fffdf5" stroke="#244d59" stroke-width="2.5"/>
+  <circle cx="168" cy="51" r="18" fill="#ffc75a"/>
+  <path d="M168 24V18M192 37L197 33M145 35L140 31M194 57L201 59" stroke="#d98b26" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M25 116C55 101 76 119 103 112C133 104 152 113 174 107C197 101 211 110 220 116V135C177 162 74 163 25 135Z" fill="#b9e5e8"/>
+  <path d="M45 115C53 102 65 100 76 92C86 85 94 73 107 77C116 80 121 95 132 97C146 100 157 94 169 102C180 109 186 112 193 116C153 133 89 132 45 115Z" fill="#74aa79" stroke="#244d59" stroke-width="2.5" stroke-linejoin="round"/>
+  <path d="M61 118C94 125 151 129 181 117" stroke="#f5d18b" stroke-width="7" stroke-linecap="round"/>
+  <path d="M123 92V74H143V97" fill="#fff6d9"/>
+  <path d="M120 75L133 63L147 75Z" fill="#e8785b" stroke="#244d59" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M123 76V92M143 76V97M132 96V83H137V97" stroke="#244d59" stroke-width="2"/>
+  <path d="M80 101V87M71 90C71 81 77 76 81 72C85 76 91 82 91 90C86 94 77 95 71 90Z" fill="#397d67" stroke="#244d59" stroke-width="2" stroke-linejoin="round"/>
+  <path d="M39 134C48 130 56 138 65 134M94 143C104 139 114 147 124 143M157 137C167 133 177 141 187 137" stroke="#398b9b" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M46 63V45L64 41V58M46 49L64 45" stroke="#244d59" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="41" cy="64" rx="6" ry="4" transform="rotate(-20 41 64)" fill="#244d59"/>
+  <ellipse cx="59" cy="59" rx="6" ry="4" transform="rotate(-20 59 59)" fill="#244d59"/>
+  <path d="M187 82V70L194 74" stroke="#d16b50" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <ellipse cx="183" cy="83" rx="5" ry="3.5" transform="rotate(-20 183 83)" fill="#d16b50"/>
+  <path d="M102 46L106 54L115 55L108 61L110 70L102 65L94 70L96 61L89 55L98 54Z" fill="#f3ba4f"/>
+</svg>
