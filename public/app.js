@@ -1,6 +1,7 @@
 import {isShortDraft,expansionHint} from './writing.js';
 import {queuedAI} from './queue.js';
 import {preparePhoto} from './photo.js';
+import {captureCameraPhoto} from './camera.js';
 import {finalLyrics,finalSegments,completed} from './state.js';
 const KEY='soando-lyrics-ai-beta-v1';const $=s=>document.querySelector(s);const app=$('#app');
 let state={intention:'',draft:'',original:'',feedback:[],decisions:{},index:0,summary:'',stage:'start'};
@@ -44,10 +45,16 @@ function render(){
  $('#final-editor').oninput=e=>{state.finalDraft=e.target.value;save();};bind('#reevaluate',()=>{state.draft=state.finalDraft??finalLyrics(state.original,state.feedback,state.decisions);stage('input');});
  bind('#revisit',()=>{state.index=0;stage('review');});bind('#copy',async()=>{try{await navigator.clipboard.writeText(state.finalDraft??finalLyrics(state.original,state.feedback,state.decisions));$('#copy').textContent='복사했어요 ✓';}catch{showError('복사 버튼을 사용할 수 없어요. 최종 가사를 길게 누르거나 드래그해서 직접 복사해 주세요.');}});bind('#reset',()=>$('#reset-confirm').hidden=false);bind('#reset-no',()=>$('#reset-confirm').hidden=true);bind('#reset-yes',()=>{state={intention:'',draft:'',original:'',feedback:[],decisions:{},index:0,summary:'',stage:'start'};clearPhoto();try{localStorage.removeItem(KEY);}catch{}stage('start');});
 }
-function photoPanel(){return `<details class="photo-panel" ${photo||transcript||busy?'open':''}><summary>손글씨 사진에서 가져오기 <span>선택</span></summary><p class="note">가사만 보이게 찍어 주세요. 얼굴·이름·학번은 빼 주세요.</p><div class="photo-buttons"><button id="photo-file" class="secondary" ${busy?'disabled':''}>사진 올리기</button><button id="photo-camera" class="secondary" ${busy?'disabled':''}>카메라로 찍기</button><input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp" hidden><input id="camera-input" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" hidden></div>${photo?`<div class="photo-preview"><img src="${photo}" alt="선택한 가사 사진"><div><p class="note">사진은 임시 저장하지 않아요.<br>‘사진 속 가사 읽기’를 누르면 Cloudflare AI로 전송돼요.</p><button id="read-photo" class="primary" ${busy?'disabled':''}>${busy?'사진을 읽고 있어요…':'사진 속 가사 읽기'}</button><button id="clear-photo" class="quiet" ${busy?'disabled':''}>사진 지우기</button></div></div>`:''}${transcript?`<div class="transcript"><label class="editor-label" for="transcript">읽어 낸 가사 · 사진과 비교해 주세요</label><p class="note">사진과 한 줄씩 비교해 주세요. 표시가 없어도 잘못 읽은 글자가 있을 수 있어요.</p><textarea id="transcript" maxlength="1200">${escape(transcript)}</textarea><div class="actions"><button id="use-transcript" class="primary">${state.draft.trim()?'이 글로 입력 가사 바꾸기':'확인한 가사 넣기'}</button>${state.draft.trim()?'<button id="append-transcript" class="secondary">기존 가사 뒤에 붙이기</button>':''}<button id="discard-transcript" class="quiet">사용하지 않기</button></div></div>`:''}<p id="photo-status" role="status" aria-live="polite" class="note">${escape(photoNotice)}</p></details>`;}
+function photoPanel(){return `<details class="photo-panel" ${photo||transcript||busy?'open':''}><summary>손글씨 사진에서 가져오기 <span>선택</span></summary><p class="note">가사만 보이게 찍어 주세요. 얼굴·이름·학번은 빼 주세요.</p><div class="photo-buttons"><button id="photo-file" class="secondary" ${busy?'disabled':''}>사진 올리기</button><button id="photo-camera" class="secondary" ${busy?'disabled':''}>카메라로 찍기</button><input id="photo-input" type="file" accept="image/jpeg,image/png,image/webp" hidden><input id="camera-input" type="file" accept="image/*" capture="environment" hidden></div>${photo?`<div class="photo-preview"><img src="${photo}" alt="선택한 가사 사진"><div><p class="note">사진은 임시 저장하지 않아요.<br>‘사진 속 가사 읽기’를 누르면 Cloudflare AI로 전송돼요.</p><button id="read-photo" class="primary" ${busy?'disabled':''}>${busy?'사진을 읽고 있어요…':'사진 속 가사 읽기'}</button><button id="clear-photo" class="quiet" ${busy?'disabled':''}>사진 지우기</button></div></div>`:''}${transcript?`<div class="transcript"><label class="editor-label" for="transcript">읽어 낸 가사 · 사진과 비교해 주세요</label><p class="note">사진과 한 줄씩 비교해 주세요. 표시가 없어도 잘못 읽은 글자가 있을 수 있어요.</p><textarea id="transcript" maxlength="1200">${escape(transcript)}</textarea><div class="actions"><button id="use-transcript" class="primary">${state.draft.trim()?'이 글로 입력 가사 바꾸기':'확인한 가사 넣기'}</button>${state.draft.trim()?'<button id="append-transcript" class="secondary">기존 가사 뒤에 붙이기</button>':''}<button id="discard-transcript" class="quiet">사용하지 않기</button></div></div>`:''}<p id="photo-status" role="status" aria-live="polite" class="note">${escape(photoNotice)}</p></details>`;}
 function clearPhoto(){photo='';transcript='';photoNotice='';}
 function bindPhoto(){
- bind('#photo-file',()=>$('#photo-input').click());bind('#photo-camera',()=>$('#camera-input').click());
+ bind('#photo-file',()=>$('#photo-input').click());bind('#photo-camera',async()=>{
+  if(busy)return;
+  if(!navigator.mediaDevices?.getUserMedia){$('#camera-input').click();return;}
+  const result=await captureCameraPhoto();
+  if(state.stage!=='input')return;
+  if(result==='gallery')$('#photo-input')?.click();else if(result)await selectPhoto(result);
+ });
  for(const id of ['#photo-input','#camera-input'])$(id).onchange=e=>selectPhoto(e.target.files?.[0]);
  bind('#clear-photo',()=>{if(busy)return;clearPhoto();render();});bind('#read-photo',readPhoto);
  if($('#transcript'))$('#transcript').oninput=e=>{transcript=e.target.value;};

@@ -40,3 +40,7 @@ body{background-color:#eef5f7;background-image:linear-gradient(#f6faf94d,#f6faf9
 /* Quiet backing keeps small guidance readable over the painted margins. */
 .album-help,.hand-note{background:#f7faf9d9;width:fit-content;padding:4px 7px;border-radius:4px}.song-path{background:#f8fbf9cf;border-radius:14px;padding-left:18px;padding-right:18px}.lyric-postcard{background:#f8fbf9cc}
 @media(max-width:760px){.song-path{padding-left:14px;padding-right:14px}}
+
+.camera-dialog{width:min(640px,calc(100% - 28px));max-height:calc(100dvh - 28px);box-sizing:border-box;overflow:auto;padding:24px;background:#fffaf0;border:1px solid #d5c9a9;border-radius:18px;color:#334363;box-shadow:0 20px 80px #14254240}
+.camera-dialog::backdrop{background:#172b45bd}.camera-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.camera-heading h2{font-size:24px;margin:0}.camera-close{white-space:nowrap;min-height:44px}.camera-dialog video{display:block;width:100%;height:min(50dvh,430px);object-fit:contain;background:#172333;border-radius:10px;margin:14px 0}.camera-status{min-height:24px}.camera-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between}.camera-actions button{min-height:48px}.camera-dialog>.note:last-child{margin-bottom:0}
+@media(max-width:480px){.camera-dialog{padding:18px 14px}.camera-heading h2{font-size:20px}.camera-actions button{flex:1;font-size:14px;padding:12px}.camera-dialog video{height:42dvh}}
