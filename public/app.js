@@ -2,7 +2,7 @@ import {isShortDraft,expansionHint} from './writing.js';
 import {queuedAI} from './queue.js';
 import {preparePhoto} from './photo.js';
 import {captureCameraPhoto} from './camera.js';
-import {mountMusicPage} from './music-page.js?v=theme-2';
+import {mountMusicPage} from './music-page.js?v=padlet-1';
 import {finalLyrics,finalSegments,completed} from './state.js';
 const KEY='soando-lyrics-ai-beta-v1';const $=s=>document.querySelector(s);const app=$('#app');
 let state={intention:'',draft:'',original:'',feedback:[],decisions:{},index:0,summary:'',stage:'start'};
