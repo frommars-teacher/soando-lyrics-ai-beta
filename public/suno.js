@@ -1,19 +1,19 @@
 export const MUSIC_OPTIONS={
  vocal:[
-  {id:'clear',label:'맑고 또렷하게',hint:'가사가 잘 들리는 목소리',en:'clear, natural lead vocals with crisp Korean diction'},
-  {id:'warm',label:'따뜻하고 부드럽게',hint:'다정하게 마음을 전해요',en:'warm, gentle lead vocals with a soft, sincere delivery'},
-  {id:'strong',label:'힘 있고 씩씩하게',hint:'자신 있게 용기를 전해요',en:'strong, confident lead vocals with clear articulation'},
-  {id:'soft',label:'잔잔하고 섬세하게',hint:'조용히 이야기를 들려줘요',en:'intimate, delicate lead vocals, softly sung with clear words'},
-  {id:'bright',label:'밝고 가볍게',hint:'웃으며 부르는 듯한 목소리',en:'bright, light lead vocals with a fresh, friendly tone'},
-  {id:'together',label:'여럿이 함께',hint:'같은 가사를 함께 불러요',en:'a small vocal group singing the written lyrics in unison, with no extra backing-vocal words'}
+  {id:'clear',label:'높고 맑은 목소리',hint:'높은 음역의 또렷한 독창',en:'one high-register solo voice with a pure, clear timbre and precise Korean diction'},
+  {id:'low',label:'낮고 묵직한 목소리',hint:'낮은 음역의 깊은 독창',en:'one low-register solo voice with a deep, resonant timbre and precise Korean diction'},
+  {id:'husky',label:'살짝 거친 허스키',hint:'숨결과 거친 질감이 들리는 독창',en:'one mid-register solo voice with a lightly raspy, husky timbre and intelligible Korean diction'},
+  {id:'child',label:'어린이 한 명의 독창',hint:'우리 나이 친구가 혼자 부르듯',en:'one natural child solo voice, without an exaggerated baby voice, with clear Korean diction'},
+  {id:'duet',label:'두 사람이 부르는 듀엣',hint:'높은 목소리와 낮은 목소리가 함께',en:'a high and a low voice singing the supplied lyrics together as a duet, without overlapping different words'},
+  {id:'choir',label:'우리 반처럼 여럿이 합창',hint:'여러 어린이의 목소리가 하나로',en:'a small children\'s choir singing the supplied lyrics in unison, with clear Korean diction and no extra backing words'}
  ],
  mood:[
-  {id:'joyful',label:'밝고 신나게',hint:'몸이 살짝 들썩이는 노래',en:'bright, joyful and playful',tempo:'an upbeat, steady rhythm'},
-  {id:'cozy',label:'따뜻하고 포근하게',hint:'고마운 마음을 안아 주듯',en:'warm, comforting and heartfelt',tempo:'a relaxed, moderate tempo'},
-  {id:'moving',label:'뭉클하고 진지하게',hint:'마음에 오래 남는 노래',en:'moving, sincere and reflective',tempo:'a gentle, unhurried tempo'},
-  {id:'hopeful',label:'희망차고 벅차게',hint:'내일을 향해 힘이 나요',en:'hopeful, uplifting and inspiring',tempo:'a steady mid-tempo pulse'},
-  {id:'calm',label:'차분하고 편안하게',hint:'내 이야기에 귀 기울이듯',en:'calm, peaceful and thoughtful',tempo:'a calm, slow tempo'},
-  {id:'brave',label:'굳세고 당당하게',hint:'함께 나아가는 마음으로',en:'brave, resolute and encouraging',tempo:'a firm, steady mid-tempo rhythm'}
+  {id:'remember',label:'조용히 기억하는 노래',hint:'소안도의 이야기에 귀 기울이듯',en:'a reflective song of remembrance, with restrained dynamics, spacious pauses and a simple melody',tempo:'a slow, unhurried pulse'},
+  {id:'courage',label:'용기를 외치는 노래',hint:'어려움에도 뜻을 굽히지 않는 힘',en:'a resolute song of courage, with accented beats, a firm rhythm and a rising melody',tempo:'a firm, steady mid-tempo pulse'},
+  {id:'solidarity',label:'함께 걷는 노래',hint:'서로 손을 놓지 않는 소안도 사람들',en:'a song of solidarity, with an even walking pulse, connected melodic phrases and a united musical feel',tempo:'a steady walking tempo'},
+  {id:'freedom',label:'자유를 맞이하는 노래',hint:'기다리던 자유를 만난 벅찬 순간',en:'a song celebrating freedom, with buoyant rhythms, open harmonies and a bright, expansive musical lift',tempo:'an energetic, upbeat pulse'},
+  {id:'thanks',label:'고마움을 전하는 노래',hint:'용기를 지킨 분들께 보내는 편지',en:'a song of gratitude, with gentle accompaniment, flowing phrases and an intimate, letter-like musical feel',tempo:'a relaxed, moderate tempo'},
+  {id:'promise',label:'내일을 약속하는 노래',hint:'그 용기를 우리도 이어 가겠다는 다짐',en:'a hopeful song of commitment, beginning simply and building gradually toward a full, uplifting ending',tempo:'a steady mid-tempo pulse'}
  ],
  genre:[
   {id:'acoustic',label:'기타가 들리는 팝',en:'acoustic pop with acoustic guitar, light percussion and warm bass'},
@@ -40,6 +40,6 @@ export function buildSunoPrompt(lyrics,settings){
  const normalized=normalizeMusic(settings),vocal=find('vocal',normalized.vocal),mood=find('mood',normalized.mood);
  if(!vocal||!mood)throw new Error('목소리와 노래 분위기를 하나씩 골라 주세요.');
  const genre=find('genre',normalized.genre),tempo=find('tempo',normalized.tempo);
- const style=`A Korean-language song: ${genre.en}. ${vocal.en}. ${mood.en} mood; ${tempo.en||mood.tempo}. Keep the words clearly audible over the accompaniment. ${LYRIC_RULES}`;
+ const style=`A Korean-language song: ${genre.en}. ${vocal.en}. ${mood.en}; ${tempo.en||mood.tempo}. Express the selected theme through the music, without adding lyrics. Keep the words clearly audible. ${LYRIC_RULES}`;
  return {lyrics,style,exclude:EXCLUDED_ELEMENTS,summary:[vocal.label,mood.label,genre.label,tempo.label],settings:normalized};
 }
