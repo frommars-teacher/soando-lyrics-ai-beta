@@ -1,13 +1,23 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "soando-lyrics-ai-beta",
-  "main": "src/worker.js",
-  "compatibility_date": "2026-10-11",
+  "name": "soando-lyrics-suno-test",
+  "main": "src/test-worker.js",
+  "compatibility_date": "2026-10-18",
   "workers_dev": true,
-  "assets": {"directory":"./public","binding":"ASSETS","run_worker_first":["/api/*"]},
-  "ai": {"binding":"AI"},
-  "durable_objects": {"bindings":[{"name":"QUOTA","class_name":"Quota"}]},
-  "migrations": [{"tag":"v1","new_sqlite_classes":["Quota"]}],
-  "vars": {"FREE_PLAN_CONFIRMED":"true","PUBLIC_AI_ENABLED":"true","DAILY_REQUEST_LIMIT":"300","DAILY_NEURON_BUDGET":"30000","MAX_CONCURRENT_AI":"20"},
-  "observability": {"enabled":false}
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ]
+  },
+  "services": [
+    {
+      "binding": "COACH",
+      "service": "soando-lyrics-ai-beta"
+    }
+  ],
+  "observability": {
+    "enabled": false
+  }
 }
